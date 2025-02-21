@@ -1,0 +1,18 @@
+Voici les problèmes cachés : 
+-La classe DeliveryService fait beaucoup trop de choses cela ne respecte pas le principe de Single responsibility
+-La classe DeliveryService calcule le prix et le prix elle fait trop de choses, ces chsoes devraient être séparés
+-Les valeurs telles que 0.1,5,3,1.5 devraient être mis dans des MagicNumber
+-La classe Package brise l'encapsulation car ces variables (weight,distance) sont définis en public
+-Le code est peu compréhensible et difficile à maintenir
+-Absence de gestion des erreurs si customerType est null une exception sera levée
+-Les régles de prix sont dans le code et difficle à modifier
+-Pas d'explication sur les régles de prix et de poids.
+-La méthode calculateDeliveryPrice gère la logique métier, la validation des entrées et applique des réductions,c'est trop pour une seule méthode
+-Console.log pour un prix invalide n'est pas une bonne pratique
+
+Axes d'améliorations : 
+-Utilisation des Getter et Setter pour les variables de package
+-Séparation des responsabilités (une classe pour le calcul du prix et l'autre pour l'affichage des factures)
+-Gestion des erreurs (Lever une exception dans le cas d'un poids invalide et non un console log)
+-Vérifier customerType afin d'éviter les erreurs
+-Utilisation des constantes et des MagicNumber

@@ -1,0 +1,99 @@
+import java.util.List;
+import java.util.Objects;
+
+public class DeliveryService {
+    private final DeliveryPriceCalculator priceCalculator;
+    private final InvoiceService invoiceService;
+
+    public DeliveryService() {
+        this.priceCalculator = new DeliveryPriceCalculator();
+        this.invoiceService = new InvoiceService();
+    }
+
+    public double calculateDeliveryPrice(List<Package> packages, String customerType, boolean urgent) {
+        return priceCalculator.calculate(packages, customerType, urgent);
+    }
+
+    public void printInvoice(List<Package> packages, String customerType) {
+        invoiceService.printInvoice(packages, customerType, priceCalculator);
+    }
+}
+
+class Package {
+    private final double weight;
+    private final double distance;
+
+    public Package(double weight, double distance) {
+        if (weight < 0) {
+            throw new IllegalArgumentException("Invalid weight: must be non-negative.");
+        }
+        this.weight = weight;
+        this.distance = distance;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+}
+
+class DeliveryPriceCalculator {
+    private static final double BASE_RATE_PER_KM = 0.1;
+    private static final double WEIGHT_SURCHARGE_5KG = 3.0;
+    private static final double WEIGHT_SURCHARGE_10KG = 5.0;
+    private static final double URGENT_MULTIPLIER = 1.5;
+    private static final double VIP_DISCOUNT = 0.8;
+    private static final double BUSINESS_DISCOUNT = 0.9;
+    private static final double BULK_DISCOUNT_THRESHOLD = 3;
+    private static final double BULK_DISCOUNT_RATE = 0.95;
+
+    public double calculate(List<Package> packages, String customerType, boolean urgent) {
+        Objects.requireNonNull(customerType, "Customer type must not be null");
+
+        double total = packages.stream().mapToDouble(pkg -> {
+            double base = pkg.getDistance() * BASE_RATE_PER_KM;
+
+            if (pkg.getWeight() > 10) {
+                base += WEIGHT_SURCHARGE_10KG;
+            } else if (pkg.getWeight() > 5) {
+                base += WEIGHT_SURCHARGE_5KG;
+            }
+
+            if (urgent) {
+                base *= URGENT_MULTIPLIER;
+            }
+
+            return applyCustomerDiscount(base, customerType);
+        }).sum();
+
+        if (packages.size() > BULK_DISCOUNT_THRESHOLD) {
+            total *= BULK_DISCOUNT_RATE;
+        }
+
+        return total;
+    }
+
+    private double applyCustomerDiscount(double price, String customerType) {
+        return switch (customerType) {
+            case "VIP" -> price * VIP_DISCOUNT;
+            case "Business" -> price * BUSINESS_DISCOUNT;
+            default -> price;
+        };
+    }
+}
+
+class InvoiceService {
+    private static final double SPECIAL_DISCOUNT_THRESHOLD = 100;
+
+    public void printInvoice(List<Package> packages, String customerType, DeliveryPriceCalculator calculator) {
+        double price = calculator.calculate(packages, customerType, false);
+        System.out.println("Total: " + price);
+
+        if (price > SPECIAL_DISCOUNT_THRESHOLD) {
+            System.out.println("Apply special discount next time!");
+        }
+    }
+}
